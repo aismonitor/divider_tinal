@@ -4,3 +4,11 @@ node_modules/
 .idea/
 .vscode/
 *.tmp
+scheme_16_2_8_iter_1/
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.gz
