@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Divider — EIS executions</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1>Divider</h1>
+      <p class="tagline">Split EIS export.xml into one contractProcedure per execution</p>
+    </header>
+
+    <section class="panel">
+      <label class="file-label">
+        <span class="file-btn">Choose XML / ZIP</span>
+        <input id="fileInput" type="file" accept=".xml,.zip,application/xml,text/xml,application/zip" />
+      </label>
+      <p id="fileName" class="file-name" hidden></p>
+    </section>
+
+    <section id="status" class="status" hidden></section>
+
+    <section id="summary" class="summary" hidden>
+      <dl>
+        <div>
+          <dt>Contract schemeVersion</dt>
+          <dd id="schemeVersion">—</dd>
+        </div>
+        <div>
+          <dt>Executions found</dt>
+          <dd id="execCount">0</dd>
+        </div>
+        <div>
+          <dt>Contract regNum</dt>
+          <dd id="regNum">—</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="listSection" class="list-section" hidden>
+      <h2>Executions</h2>
+      <ol id="execList" class="exec-list"></ol>
+      <button id="exportBtn" type="button" class="export-btn" disabled>Export all executions</button>
+    </section>
+  </main>
+
+  <script src="vendor/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
