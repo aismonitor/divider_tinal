@@ -23,15 +23,17 @@ Any other static server works the same way (for example `npx serve`).
 
 ## Use
 
-1. Click **Choose XML / ZIP** and select an EIS export file:
+1. Switch **Language** (English / Русский) in the header — the whole UI updates immediately. Choice is remembered in the browser.
+2. Click **Choose XML / ZIP** and select an EIS export file:
    - `.xml` — root `ns3:export` with at least one `ns3:contract`
    - `.zip` — archive that contains such an XML (first matching file is used)
-2. Check the summary:
-   - **Contract schemeVersion** — from `ns3:contract`
-   - **Executions found** — count of `contractProcedure` nodes that contain `<executions>`
-   - **Contract regNum** — registry number used in export file names
-3. Review the list (ordinal, document name / payment doc, date, id).
-4. Click **Export all executions** to download `executions_{regNum}.zip`.
+3. Review the results:
+   - **Parsed** file name
+   - customer `shortName` and `contractSubject`
+   - **Found N executions**
+4. Use **Select all** / row checkboxes to mark executions (`number`, `paidRUR`, name, date).
+   Click a row (not the checkbox) to preview that execution’s XML in a new tab.
+5. Click **Export selected** — a ZIP is created **only then**, and **only** for marked executions.
 
 Each file in the ZIP looks like:
 
