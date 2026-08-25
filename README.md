@@ -85,8 +85,8 @@ Each file in the ZIP looks like `{regNum}_exec_{ordinal}_{id}.xml`.
 ### Editor
 
 1. Click **Import XML**.
-2. Browse the tree: ▸/▾ collapses nodes; **Expand all** / **Collapse all** for the whole document.
-3. Edit attribute values and element text in place.
+2. Data is shown as a **Field / Value** table. Sections with data start expanded; empty ones stay collapsed.
+3. Edit values in place. Use **Expand all** / **Collapse empty** as needed.
 4. Click **Download XML** to save the edited file.
 
 ## Project layout

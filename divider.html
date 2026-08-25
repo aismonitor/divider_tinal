@@ -62,7 +62,18 @@
         <span id="selectAllLabel" data-i18n="selectAll">Select all</span>
       </label>
 
-      <ul id="execList" class="exec-list"></ul>
+      <div class="exec-table">
+        <div id="execHead" class="exec-row exec-head" hidden>
+          <span class="exec-num" data-i18n="colOrdinal">#</span>
+          <span class="exec-docnum" data-i18n="colDocumentNum">Doc. №</span>
+          <span class="exec-sid" data-i18n="colSid">SID</span>
+          <span class="exec-paid" data-i18n="colPaid">Paid</span>
+          <span class="exec-name" data-i18n="colName">Name</span>
+          <span class="exec-date" data-i18n="colDate">Date</span>
+          <span class="exec-check" aria-hidden="true"></span>
+        </div>
+        <ul id="execList" class="exec-list"></ul>
+      </div>
 
       <button id="exportBtn" type="button" class="export-btn" disabled>
         Export selected

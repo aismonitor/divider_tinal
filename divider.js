@@ -18,6 +18,12 @@
       parsedFile: "Parsed {name}",
       foundExecutions: "Found {n} executions:",
       listHint: "Click a row to open its XML in a new tab",
+      colDocumentNum: "Doc. №",
+      colSid: "SID",
+      colOrdinal: "#",
+      colPaid: "Paid",
+      colName: "Name",
+      colDate: "Date",
       exportedOk: "Exported {n} file(s) → {name}",
       nothingSelected: "Select at least one execution to export",
       openFailed: "Could not open XML in a new tab (check popup blocker)",
@@ -52,6 +58,12 @@
       parsedFile: "Разобран файл {name}",
       foundExecutions: "Найдено исполнений: {n}",
       listHint: "Нажмите на строку, чтобы открыть XML в новой вкладке",
+      colDocumentNum: "№ док.",
+      colSid: "SID",
+      colOrdinal: "№",
+      colPaid: "Оплачено",
+      colName: "Наименование",
+      colDate: "Дата",
       exportedOk: "Экспортировано файлов: {n} → {name}",
       nothingSelected: "Выберите хотя бы одно исполнение для экспорта",
       openFailed: "Не удалось открыть XML в новой вкладке (проверьте блокировку всплывающих окон)",
@@ -84,6 +96,7 @@
   const parsedLineEl = document.getElementById("parsedLine");
   const contractLineEl = document.getElementById("contractLine");
   const foundLineEl = document.getElementById("foundLine");
+  const execHeadEl = document.getElementById("execHead");
   const execListEl = document.getElementById("execList");
   const exportBtn = document.getElementById("exportBtn");
   const selectAllEl = document.getElementById("selectAll");
@@ -98,6 +111,8 @@
    * @property {Element} procedureEl
    * @property {string} id
    * @property {string} ordinalNumber
+   * @property {string} documentNum
+   * @property {string} sid
    * @property {string} kind
    * @property {string} name
    * @property {string} docDate
@@ -262,6 +277,7 @@
     lastStatusKind = "";
     resultsEl.hidden = true;
     summaryEl.hidden = true;
+    if (execHeadEl) execHeadEl.hidden = true;
     execListEl.innerHTML = "";
     selectAllEl.checked = true;
     selectAllEl.indeterminate = false;
@@ -323,6 +339,7 @@
     contractLineEl.textContent = `${shortName} — ${subject}`;
     foundLineEl.textContent = t("foundExecutions", { n: parsed.executions.length });
 
+    if (execHeadEl) execHeadEl.hidden = false;
     execListEl.innerHTML = "";
     for (const item of parsed.executions) {
       const li = document.createElement("li");
@@ -330,10 +347,22 @@
 
       const num = document.createElement("span");
       num.className = "exec-num";
+      num.dataset.label = t("colOrdinal");
       num.textContent = item.ordinalNumber;
+
+      const documentNum = document.createElement("span");
+      documentNum.className = "exec-docnum";
+      documentNum.dataset.label = t("colDocumentNum");
+      documentNum.textContent = item.documentNum || t("dash");
+
+      const sid = document.createElement("span");
+      sid.className = "exec-sid";
+      sid.dataset.label = t("colSid");
+      sid.textContent = item.sid || t("dash");
 
       const paid = document.createElement("span");
       paid.className = "exec-paid";
+      paid.dataset.label = t("colPaid");
       paid.textContent = item.paidRUR || t("dash");
 
       const name = document.createElement("span");
@@ -342,6 +371,7 @@
 
       const date = document.createElement("span");
       date.className = "exec-date";
+      date.dataset.label = t("colDate");
       date.textContent = item.docDate ? normalizeDate(item.docDate) : t("dash");
 
       const checkLabel = document.createElement("label");
@@ -360,7 +390,7 @@
       checkLabel.appendChild(checkbox);
       checkLabel.addEventListener("click", (e) => e.stopPropagation());
 
-      li.append(num, paid, name, date, checkLabel);
+      li.append(num, documentNum, sid, paid, name, date, checkLabel);
       li.title = t("listHint");
       li.addEventListener("click", () => openExecutionXml(item));
       execListEl.appendChild(li);
@@ -551,6 +581,8 @@
         procedureEl,
         id,
         ordinalNumber,
+        documentNum: details.documentNum,
+        sid: details.sid,
         kind: details.kind,
         name: details.name,
         docDate: details.docDate,
@@ -583,6 +615,8 @@
     let kind = "unknown";
     let name = "";
     let docDate = "";
+    let documentNum = "";
+    let sid = "";
     let paidSum = 0;
     let hasPaid = false;
 
@@ -602,6 +636,8 @@
           kind = "docAcceptance";
           name = textOf(findLocal(docAcceptance, "name"));
           docDate = textOf(findLocal(docAcceptance, "documentDate"));
+          documentNum = textOf(findLocal(docAcceptance, "documentNum"));
+          sid = textOf(findLocal(docAcceptance, "sid"));
           continue;
         }
         const payDoc = findLocal(executionEl, "payDoc");
@@ -609,6 +645,8 @@
           kind = "payDoc";
           name = textOf(findLocal(payDoc, "documentName"));
           docDate = textOf(findLocal(payDoc, "documentDate"));
+          documentNum = textOf(findLocal(payDoc, "documentNum"));
+          sid = textOf(findLocal(payDoc, "sid"));
         }
       }
     }
@@ -617,6 +655,8 @@
       kind,
       name,
       docDate,
+      documentNum,
+      sid,
       paidRUR: hasPaid ? formatMoney(paidSum) : "",
     };
   }

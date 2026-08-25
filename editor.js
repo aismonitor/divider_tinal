@@ -6,15 +6,17 @@
       langLabel: "Language",
       langAria: "Interface language",
       backHome: "← Tools",
-      tagline: "Import XML, edit the tree, download the result",
+      tagline: "Import XML, edit data in a table, download the result",
       chooseFile: "Import XML",
       expandAll: "Expand all",
-      collapseAll: "Collapse all",
+      collapseEmpty: "Collapse empty",
       download: "Download XML",
       fileName: "File",
-      rootName: "Root",
-      nodeCount: "Elements",
-      treeHint: "Click ▸/▾ to collapse nodes. Edit attribute values and text in place.",
+      rootName: "Document",
+      fieldCount: "Fields",
+      tableHint: "Sections with data are expanded. Edit values in the Value column.",
+      colField: "Field",
+      colValue: "Value",
       loadedOk: "Loaded {name}",
       downloadedOk: "Downloaded {name}",
       invalidXml: "Invalid XML: {detail}",
@@ -23,24 +25,25 @@
       readFailed: "Failed to read file",
       nothingLoaded: "Import an XML file first",
       pageTitle: "Editor — XML",
-      attrsLabel: "Attributes",
-      textLabel: "Text",
-      childrenLabel: "{n} children",
-      dash: "—",
+      fieldsInSection: "{n} fields",
+      emptySection: "empty",
+      valueLabel: "value",
     },
     ru: {
       langLabel: "Язык",
       langAria: "Язык интерфейса",
       backHome: "← Инструменты",
-      tagline: "Импорт XML, правка дерева, скачивание результата",
+      tagline: "Импорт XML, правка данных в таблице, скачивание результата",
       chooseFile: "Импорт XML",
       expandAll: "Развернуть всё",
-      collapseAll: "Свернуть всё",
+      collapseEmpty: "Свернуть пустые",
       download: "Скачать XML",
       fileName: "Файл",
-      rootName: "Корень",
-      nodeCount: "Элементов",
-      treeHint: "Нажмите ▸/▾ чтобы свернуть узлы. Правите атрибуты и текст на месте.",
+      rootName: "Документ",
+      fieldCount: "Полей",
+      tableHint: "Секции с данными развёрнуты. Правите значения в колонке «Значение».",
+      colField: "Поле",
+      colValue: "Значение",
       loadedOk: "Загружен {name}",
       downloadedOk: "Скачан {name}",
       invalidXml: "Некорректный XML: {detail}",
@@ -49,10 +52,9 @@
       readFailed: "Не удалось прочитать файл",
       nothingLoaded: "Сначала импортируйте XML",
       pageTitle: "Editor — XML",
-      attrsLabel: "Атрибуты",
-      textLabel: "Текст",
-      childrenLabel: "Дочерних: {n}",
-      dash: "—",
+      fieldsInSection: "полей: {n}",
+      emptySection: "пусто",
+      valueLabel: "значение",
     },
   };
 
@@ -63,12 +65,12 @@
   const metaEl = document.getElementById("meta");
   const fileNameEl = document.getElementById("fileName");
   const rootNameEl = document.getElementById("rootName");
-  const nodeCountEl = document.getElementById("nodeCount");
-  const treePanel = document.getElementById("treePanel");
-  const treeEl = document.getElementById("tree");
+  const fieldCountEl = document.getElementById("fieldCount");
+  const tablePanel = document.getElementById("tablePanel");
+  const dataBody = document.getElementById("dataBody");
   const editorActions = document.getElementById("editorActions");
   const expandAllBtn = document.getElementById("expandAllBtn");
-  const collapseAllBtn = document.getElementById("collapseAllBtn");
+  const collapseEmptyBtn = document.getElementById("collapseEmptyBtn");
   const downloadBtn = document.getElementById("downloadBtn");
   const langSelect = document.getElementById("langSelect");
 
@@ -118,18 +120,11 @@
 
   /** @param {Element} el */
   function displayName(el) {
-    return el.tagName.includes(":") ? el.tagName : el.localName || el.tagName;
+    const name = el.localName || el.tagName;
+    return name.includes(":") ? name.split(":").pop() : name;
   }
 
   /** @param {Element} el */
-  function countElements(el) {
-    return 1 + Array.from(el.children).reduce((n, child) => n + countElements(child), 0);
-  }
-
-  /**
-   * Direct text content (excluding nested element text).
-   * @param {Element} el
-   */
   function directText(el) {
     let out = "";
     for (const node of el.childNodes) {
@@ -138,168 +133,359 @@
     return out;
   }
 
-  /**
-   * @param {Element} el
-   * @param {string} value
-   */
+  /** @param {Element} el @param {string} value */
   function setDirectText(el, value) {
     const toRemove = [];
     for (const node of el.childNodes) {
       if (node.nodeType === Node.TEXT_NODE) toRemove.push(node);
     }
     toRemove.forEach((n) => el.removeChild(n));
-
-    const trimmed = value;
     if (el.children.length === 0) {
-      el.appendChild(doc.createTextNode(trimmed));
+      el.appendChild(doc.createTextNode(value));
       return;
     }
-    if (trimmed.trim()) {
-      el.insertBefore(doc.createTextNode(trimmed), el.firstChild);
+    if (value) el.insertBefore(doc.createTextNode(value), el.firstChild);
+  }
+
+  /** @param {Element} el */
+  function isLeaf(el) {
+    return el.children.length === 0;
+  }
+
+  /** @param {Attr} attr */
+  function isXmlns(attr) {
+    return attr.name === "xmlns" || attr.name.startsWith("xmlns:");
+  }
+
+  /** @param {Element} el */
+  function dataAttrs(el) {
+    return Array.from(el.attributes).filter((a) => !isXmlns(a));
+  }
+
+  /** @param {Element} el */
+  function hasData(el) {
+    if (dataAttrs(el).some((a) => a.value.trim())) return true;
+    if (directText(el).trim()) return true;
+    return Array.from(el.children).some((c) => hasData(c));
+  }
+
+  /** @param {Element} el */
+  function countFields(el) {
+    let n = dataAttrs(el).length;
+    if (isLeaf(el)) return n + 1;
+    if (directText(el).trim()) n += 1;
+    for (const child of el.children) n += countFields(child);
+    return n;
+  }
+
+  /** @param {Element} el @param {Element | null} parent */
+  function sectionTitle(el, parent) {
+    const name = displayName(el);
+    if (!parent) return name;
+    const same = Array.from(parent.children).filter((c) => c.tagName === el.tagName);
+    if (same.length <= 1) return name;
+    return `${name} #${same.indexOf(el) + 1}`;
+  }
+
+  /** @param {HTMLTextAreaElement} el */
+  function autosizeField(el) {
+    if (el.dataset.fixedHeight === "1") return;
+    if (el.closest("tr")?.hidden) return;
+    el.style.height = "auto";
+    const next = el.scrollHeight;
+    if (next > 0) el.style.height = `${next}px`;
+  }
+
+  /** @param {ParentNode} root */
+  function autosizeFieldsIn(root) {
+    root.querySelectorAll("textarea.data-input:not([data-fixed-height='1'])").forEach((el) => {
+      autosizeField(/** @type {HTMLTextAreaElement} */ (el));
+    });
+  }
+
+  /**
+   * Attachment / crypto payload fields can be multi‑MB base64 — keep fixed height.
+   * Seen in EIS samples: <content> under attachmentInfo; <signature> under cryptoSigns/attachment.
+   * @param {Element | null} el
+   * @param {string} [fieldLabel]
+   * @param {string} [value]
+   */
+  function isFixedHeightValue(el, fieldLabel, value) {
+    const fromEl = el ? displayName(el).toLowerCase() : "";
+    const fromLabel = (fieldLabel || "").replace(/\s+#\d+$/, "").toLowerCase();
+    const names = [fromEl, fromLabel].filter(Boolean);
+    const bulkyNames = new Set([
+      "content",
+      "attachmentcontent",
+      "filecontent",
+      "signature",
+    ]);
+    if (names.some((n) => bulkyNames.has(n))) return true;
+
+    for (const n of names) {
+      if (
+        n.endsWith("content") &&
+        n !== "publishedcontentid" &&
+        n !== "contentid" &&
+        el &&
+        hasAttachmentAncestor(el)
+      ) {
+        return true;
+      }
+    }
+
+    const sample = value != null ? value : el ? directText(el) : "";
+    if (sample.length >= 2048 && looksLikeBase64Payload(sample)) return true;
+    return false;
+  }
+
+  /** @param {Element} el */
+  function hasAttachmentAncestor(el) {
+    let p = el.parentElement;
+    while (p && p.nodeType === Node.ELEMENT_NODE) {
+      const n = displayName(p).toLowerCase();
+      if (n.includes("attachment") || n === "cryptosigns") return true;
+      p = p.parentElement;
+    }
+    return false;
+  }
+
+  /** @param {string} text */
+  function looksLikeBase64Payload(text) {
+    const head = text.trim().slice(0, 240).replace(/\s+/g, "");
+    return head.length >= 64 && /^[A-Za-z0-9+/=]+$/.test(head);
+  }
+
+  /**
+   * @param {HTMLElement} cell
+   * @param {string} value
+   * @param {(v: string) => void} onChange
+   * @param {{ fixedHeight?: boolean }} [opts]
+   */
+  function bindValueInput(cell, value, onChange, opts) {
+    const fixed = Boolean(opts && opts.fixedHeight);
+    const input = document.createElement("textarea");
+    input.className = fixed
+      ? "data-input data-textarea data-textarea-fixed"
+      : "data-input data-textarea";
+    input.rows = fixed ? 3 : 1;
+    if (fixed) input.dataset.fixedHeight = "1";
+    input.value = value;
+    input.spellcheck = false;
+    input.addEventListener("input", () => {
+      onChange(input.value);
+      if (!fixed) autosizeField(input);
+    });
+    cell.appendChild(input);
+    if (!fixed) {
+      requestAnimationFrame(() => {
+        autosizeField(input);
+        requestAnimationFrame(() => autosizeField(input));
+      });
+    }
+  }
+
+  /**
+   * @param {string} field
+   * @param {string} value
+   * @param {(v: string) => void} onChange
+   * @param {number} depth
+   * @param {Element | null} [sourceEl]
+   */
+  function createFieldRow(field, value, onChange, depth, sourceEl) {
+    const tr = document.createElement("tr");
+    tr.className = "data-row";
+    tr.style.setProperty("--depth", String(depth));
+
+    const th = document.createElement("td");
+    th.className = "data-field";
+    th.textContent = field;
+
+    const td = document.createElement("td");
+    td.className = "data-value";
+    bindValueInput(td, value, onChange, {
+      fixedHeight: isFixedHeightValue(sourceEl || null, field, value),
+    });
+
+    tr.append(th, td);
+    return tr;
+  }
+
+  /**
+   * @param {HTMLTableRowElement & {_members?: HTMLTableRowElement[]}} header
+   * @param {boolean} expand
+   */
+  function setSectionExpanded(header, expand) {
+    header.setAttribute("aria-expanded", expand ? "true" : "false");
+    const caret = header.querySelector(".section-caret");
+    if (caret) caret.textContent = expand ? "▾" : "▸";
+
+    for (const row of header._members || []) {
+      if (!expand) {
+        row.hidden = true;
+        if (row.classList.contains("section-row")) setSectionExpanded(/** @type {any} */ (row), false);
+      } else {
+        row.hidden = false;
+        if (row.classList.contains("section-row")) {
+          const nestedOpen = row.getAttribute("aria-expanded") === "true";
+          setSectionExpanded(/** @type {any} */ (row), nestedOpen);
+        } else {
+          autosizeFieldsIn(row);
+        }
+      }
+    }
+    if (expand) {
+      requestAnimationFrame(() => autosizeFieldsIn(header.parentElement || dataBody));
     }
   }
 
   /**
    * @param {Element} el
+   * @param {Element | null} parent
    * @param {number} depth
-   * @param {boolean} startCollapsed
    */
-  function renderNode(el, depth, startCollapsed) {
-    const hasChildren = el.children.length > 0;
-    const text = directText(el);
-    const hasSignificantText = text.trim().length > 0;
-    const attrs = Array.from(el.attributes);
+  function renderSection(el, parent, depth) {
+    const frag = document.createDocumentFragment();
 
-    const item = document.createElement("div");
-    item.className = "tree-node";
-    item.style.setProperty("--depth", String(depth));
-    item.setAttribute("role", "treeitem");
-    item.setAttribute("aria-expanded", hasChildren ? (startCollapsed ? "false" : "true") : "true");
+    if (isLeaf(el) && dataAttrs(el).length === 0) {
+      frag.appendChild(
+        createFieldRow(sectionTitle(el, parent), directText(el), (v) => setDirectText(el, v), depth, el),
+      );
+      return frag;
+    }
 
-    const row = document.createElement("div");
-    row.className = "tree-row";
+    const title = sectionTitle(el, parent);
+    const filled = hasData(el);
+    const expanded = filled;
+    const fieldN = countFields(el);
 
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "tree-toggle";
-    toggle.tabIndex = -1;
-    if (hasChildren) {
-      toggle.textContent = startCollapsed ? "▸" : "▾";
-      toggle.setAttribute("aria-label", startCollapsed ? t("expandAll") : t("collapseAll"));
+    /** @type {HTMLTableRowElement & {_members?: HTMLTableRowElement[]}} */
+    const header = document.createElement("tr");
+    header.className = "section-row";
+    header.style.setProperty("--depth", String(depth));
+    header.setAttribute("aria-expanded", expanded ? "true" : "false");
+    header.dataset.hasData = filled ? "1" : "0";
+
+    const cell = document.createElement("td");
+    cell.colSpan = 2;
+    cell.className = "section-cell";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "section-toggle";
+
+    const caret = document.createElement("span");
+    caret.className = "section-caret";
+    caret.textContent = expanded ? "▾" : "▸";
+
+    const titleEl = document.createElement("span");
+    titleEl.className = "section-title";
+    titleEl.textContent = title;
+
+    const meta = document.createElement("span");
+    meta.className = "section-meta";
+    meta.textContent = filled ? t("fieldsInSection", { n: fieldN }) : t("emptySection");
+
+    btn.append(caret, titleEl, meta);
+    cell.appendChild(btn);
+    header.appendChild(cell);
+    frag.appendChild(header);
+
+    /** @type {HTMLTableRowElement[]} */
+    const members = [];
+
+    /** @param {HTMLTableRowElement} row */
+    const pushMember = (row) => {
+      row.classList.add("section-member");
+      row.hidden = !expanded;
+      members.push(row);
+      frag.appendChild(row);
+    };
+
+    /** @param {DocumentFragment} inner */
+    const pushFrag = (inner) => {
+      while (inner.firstChild) {
+        pushMember(/** @type {HTMLTableRowElement} */ (inner.firstChild));
+      }
+    };
+
+    for (const attr of dataAttrs(el)) {
+      pushMember(
+        createFieldRow(attr.name, attr.value, (v) => el.setAttribute(attr.name, v), depth + 1, el),
+      );
+    }
+
+    if (isLeaf(el)) {
+      pushMember(
+        createFieldRow(t("valueLabel"), directText(el), (v) => setDirectText(el, v), depth + 1, el),
+      );
     } else {
-      toggle.textContent = "·";
-      toggle.classList.add("is-leaf");
-      toggle.disabled = true;
-    }
-
-    const tag = document.createElement("span");
-    tag.className = "tree-tag";
-    tag.textContent = `<${displayName(el)}>`;
-
-    const badge = document.createElement("span");
-    badge.className = "tree-badge";
-    if (hasChildren) {
-      badge.textContent = t("childrenLabel", { n: el.children.length });
-    } else if (hasSignificantText) {
-      const preview = text.trim().slice(0, 48);
-      badge.textContent = preview + (text.trim().length > 48 ? "…" : "");
-    }
-
-    row.append(toggle, tag, badge);
-    item.appendChild(row);
-
-    const body = document.createElement("div");
-    body.className = "tree-body";
-    if (hasChildren && startCollapsed) body.hidden = true;
-
-    if (attrs.length) {
-      const attrsBlock = document.createElement("div");
-      attrsBlock.className = "tree-attrs";
-      const attrsTitle = document.createElement("div");
-      attrsTitle.className = "tree-section-label";
-      attrsTitle.textContent = t("attrsLabel");
-      attrsBlock.appendChild(attrsTitle);
-
-      for (const attr of attrs) {
-        const line = document.createElement("label");
-        line.className = "tree-attr";
-        const name = document.createElement("span");
-        name.className = "tree-attr-name";
-        name.textContent = attr.name;
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "tree-input";
-        input.value = attr.value;
-        input.spellcheck = false;
-        input.addEventListener("input", () => {
-          el.setAttribute(attr.name, input.value);
-        });
-        line.append(name, input);
-        attrsBlock.appendChild(line);
+      const text = directText(el);
+      if (text.trim()) {
+        pushMember(
+          createFieldRow("(text)", text, (v) => setDirectText(el, v), depth + 1, el),
+        );
       }
-      body.appendChild(attrsBlock);
-    }
 
-    if (hasSignificantText || (!hasChildren && text.length >= 0)) {
-      const textBlock = document.createElement("label");
-      textBlock.className = "tree-text";
-      const textTitle = document.createElement("span");
-      textTitle.className = "tree-section-label";
-      textTitle.textContent = t("textLabel");
-      const area = document.createElement("textarea");
-      area.className = "tree-textarea";
-      area.rows = Math.min(6, Math.max(1, text.split("\n").length));
-      area.value = text.trim() ? text : text;
-      area.spellcheck = false;
-      area.addEventListener("input", () => {
-        setDirectText(el, area.value);
-        if (!hasChildren) {
-          const preview = area.value.trim().slice(0, 48);
-          badge.textContent = preview ? preview + (area.value.trim().length > 48 ? "…" : "") : "";
-        }
-      });
-      textBlock.append(textTitle, area);
-      body.appendChild(textBlock);
-    }
-
-    if (hasChildren) {
-      const kids = document.createElement("div");
-      kids.className = "tree-children";
-      kids.setAttribute("role", "group");
-      // Collapse deep levels by default for better UX on large EIS files
-      const childStartCollapsed = depth >= 1;
+      const childTagCounts = new Map();
       for (const child of el.children) {
-        kids.appendChild(renderNode(child, depth + 1, childStartCollapsed));
+        childTagCounts.set(child.tagName, (childTagCounts.get(child.tagName) || 0) + 1);
       }
-      body.appendChild(kids);
+      const seen = new Map();
 
-      toggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const expanded = item.getAttribute("aria-expanded") === "true";
-        item.setAttribute("aria-expanded", expanded ? "false" : "true");
-        body.hidden = expanded;
-        toggle.textContent = expanded ? "▸" : "▾";
-      });
-
-      row.addEventListener("click", (e) => {
-        if (e.target === toggle || e.target.closest("input, textarea, button, a, label")) return;
-        toggle.click();
-      });
+      for (const child of el.children) {
+        if (isLeaf(child) && dataAttrs(child).length === 0) {
+          const base = displayName(child);
+          const total = childTagCounts.get(child.tagName) || 1;
+          let label = base;
+          if (total > 1) {
+            const idx = (seen.get(child.tagName) || 0) + 1;
+            seen.set(child.tagName, idx);
+            label = `${base} #${idx}`;
+          }
+          pushMember(
+            createFieldRow(label, directText(child), (v) => setDirectText(child, v), depth + 1, child),
+          );
+        } else {
+          pushFrag(renderSection(child, el, depth + 1));
+        }
+      }
     }
 
-    item.appendChild(body);
-    return item;
+    header._members = members;
+    btn.addEventListener("click", () => {
+      const open = header.getAttribute("aria-expanded") === "true";
+      setSectionExpanded(header, !open);
+    });
+
+    return frag;
   }
 
-  /** @param {boolean} expand */
-  function setAllExpanded(expand) {
-    treeEl.querySelectorAll(".tree-node").forEach((node) => {
-      const toggle = node.querySelector(":scope > .tree-row > .tree-toggle");
-      const body = node.querySelector(":scope > .tree-body");
-      if (!toggle || toggle.classList.contains("is-leaf") || !body) return;
-      node.setAttribute("aria-expanded", expand ? "true" : "false");
-      body.hidden = !expand;
-      toggle.textContent = expand ? "▾" : "▸";
+  /** @param {Element} root */
+  function renderDocument(root) {
+    dataBody.replaceChildren();
+    const onlyNsAttrs = dataAttrs(root).length === 0;
+    const skipRootShell = !isLeaf(root) && onlyNsAttrs && !directText(root).trim();
+
+    if (skipRootShell) {
+      for (const child of root.children) {
+        dataBody.appendChild(renderSection(child, root, 0));
+      }
+    } else {
+      dataBody.appendChild(renderSection(root, null, 0));
+    }
+  }
+
+  function expandAllSections() {
+    dataBody.querySelectorAll(".section-row").forEach((h) => {
+      setSectionExpanded(/** @type {any} */ (h), true);
+    });
+  }
+
+  function collapseEmptyOnly() {
+    dataBody.querySelectorAll(".section-row").forEach((h) => {
+      const header = /** @type {any} */ (h);
+      setSectionExpanded(header, header.dataset.hasData === "1");
     });
   }
 
@@ -352,16 +538,18 @@
 
     fileNameEl.textContent = name;
     rootNameEl.textContent = displayName(root);
-    nodeCountEl.textContent = String(countElements(root));
+    fieldCountEl.textContent = String(countFields(root));
 
-    treeEl.replaceChildren();
-    // Root expanded; deeper levels start collapsed
-    treeEl.appendChild(renderNode(root, 0, false));
+    renderDocument(root);
 
     metaEl.hidden = false;
-    treePanel.hidden = false;
+    tablePanel.hidden = false;
     editorActions.hidden = false;
     setStatus(t("loadedOk", { name }), "ok");
+    requestAnimationFrame(() => {
+      autosizeFieldsIn(dataBody);
+      requestAnimationFrame(() => autosizeFieldsIn(dataBody));
+    });
   }
 
   fileInput?.addEventListener("change", async () => {
@@ -373,29 +561,24 @@
     } catch (e) {
       doc = null;
       metaEl.hidden = true;
-      treePanel.hidden = true;
+      tablePanel.hidden = true;
       editorActions.hidden = true;
-      treeEl.replaceChildren();
+      dataBody.replaceChildren();
       setStatus(e instanceof Error ? e.message : t("readFailed"), "error");
     } finally {
       fileInput.value = "";
     }
   });
 
-  expandAllBtn?.addEventListener("click", () => setAllExpanded(true));
-  collapseAllBtn?.addEventListener("click", () => setAllExpanded(false));
+  expandAllBtn?.addEventListener("click", expandAllSections);
+  collapseEmptyBtn?.addEventListener("click", collapseEmptyOnly);
   downloadBtn?.addEventListener("click", downloadXml);
 
   langSelect?.addEventListener("change", () => {
     lang = langSelect.value === "ru" ? "ru" : "en";
     localStorage.setItem(LANG_KEY, lang);
     applyI18n();
-    if (doc) {
-      // Re-render tree so labels update
-      const root = doc.documentElement;
-      treeEl.replaceChildren();
-      treeEl.appendChild(renderNode(root, 0, false));
-    }
+    if (doc) renderDocument(doc.documentElement);
   });
 
   applyI18n();
