@@ -32,6 +32,227 @@ body {
   margin: 2.5rem auto 3rem;
 }
 
+.app.editor-app {
+  width: min(1100px, calc(100% - 2rem));
+}
+
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.tool-nav {
+  margin-top: 2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.4rem 1.35rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.tool-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.tool-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tool-card-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ghost-btn {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghost-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-actions .export-btn {
+  margin-top: 0;
+}
+
+.editor-meta {
+  margin-top: 1rem;
+}
+
+.tree-panel {
+  margin-top: 1rem;
+}
+
+.xml-tree {
+  border: 1px solid var(--line);
+  background: #faf7f0;
+  max-height: min(70vh, 820px);
+  overflow: auto;
+  padding: 0.35rem 0;
+}
+
+.tree-node {
+  --depth: 0;
+}
+
+.tree-row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, auto) minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.35rem 0.75rem 0.35rem calc(0.55rem + var(--depth) * 1.1rem);
+  cursor: default;
+  user-select: none;
+}
+
+.tree-row:hover {
+  background: #f0ebe0;
+}
+
+.tree-toggle {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tree-toggle.is-leaf {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.tree-tag {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.tree-badge {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.tree-body {
+  padding: 0 0.75rem 0.55rem calc(0.55rem + var(--depth) * 1.1rem + 1.6rem);
+}
+
+.tree-section-label {
+  display: block;
+  margin: 0.35rem 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tree-attrs,
+.tree-text {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.tree-attr {
+  display: grid;
+  grid-template-columns: minmax(7rem, 12rem) minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.tree-attr-name {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.tree-input,
+.tree-textarea {
+  width: 100%;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.5rem;
+}
+
+.tree-textarea {
+  resize: vertical;
+  min-height: 2.2rem;
+  line-height: 1.35;
+}
+
+.tree-input:focus,
+.tree-textarea:focus {
+  outline: 2px solid #b7d7ce;
+  outline-offset: 1px;
+}
+
+.tree-children {
+  margin-top: 0.15rem;
+}
+
 .header-top {
   display: flex;
   align-items: flex-start;
@@ -287,8 +508,24 @@ body {
 }
 
 @media (max-width: 720px) {
+  .tool-nav {
+    grid-template-columns: 1fr;
+  }
+
   .summary div {
     grid-template-columns: 1fr;
+  }
+
+  .tree-attr {
+    grid-template-columns: 1fr;
+  }
+
+  .tree-row {
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+  }
+
+  .tree-badge {
+    grid-column: 2;
   }
 
   .exec-row {

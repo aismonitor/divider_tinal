@@ -5,6 +5,7 @@
     en: {
       langLabel: "Language",
       langAria: "Interface language",
+      backHome: "← Tools",
       tagline: "Split EIS export.xml into one contractProcedure per execution",
       chooseFile: "Choose XML / ZIP",
       schemeVersion: "Contract scheme version",
@@ -38,6 +39,7 @@
     ru: {
       langLabel: "Язык",
       langAria: "Язык интерфейса",
+      backHome: "← Инструменты",
       tagline: "Разделение EIS export.xml на отдельные contractProcedure по исполнениям",
       chooseFile: "Выбрать XML / ZIP",
       schemeVersion: "Версия схемы контракта",

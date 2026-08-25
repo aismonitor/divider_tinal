@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editor — XML</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app editor-app">
+    <header class="header">
+      <div class="header-top">
+        <div class="header-brand">
+          <a class="back-link" href="index.html" data-i18n="backHome">← Tools</a>
+          <h1>Editor</h1>
+        </div>
+        <label class="lang-picker">
+          <span class="lang-label" data-i18n="langLabel">Language</span>
+          <select id="langSelect" aria-label="Interface language">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+          </select>
+        </label>
+      </div>
+      <p class="tagline" data-i18n="tagline">Import XML, edit the tree, download the result</p>
+    </header>
+
+    <section class="panel editor-toolbar">
+      <label class="file-label">
+        <span class="file-btn" data-i18n="chooseFile">Import XML</span>
+        <input id="fileInput" type="file" accept=".xml,application/xml,text/xml" />
+      </label>
+      <div class="editor-actions" id="editorActions" hidden>
+        <button type="button" id="expandAllBtn" class="ghost-btn" data-i18n="expandAll">Expand all</button>
+        <button type="button" id="collapseAllBtn" class="ghost-btn" data-i18n="collapseAll">Collapse all</button>
+        <button type="button" id="downloadBtn" class="export-btn" data-i18n="download">Download XML</button>
+      </div>
+    </section>
+
+    <section id="status" class="status" hidden></section>
+
+    <section id="meta" class="summary editor-meta" hidden>
+      <dl>
+        <div>
+          <dt data-i18n="fileName">File</dt>
+          <dd id="fileName">—</dd>
+        </div>
+        <div>
+          <dt data-i18n="rootName">Root</dt>
+          <dd id="rootName">—</dd>
+        </div>
+        <div>
+          <dt data-i18n="nodeCount">Elements</dt>
+          <dd id="nodeCount">0</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="treePanel" class="results tree-panel" hidden>
+      <p class="list-hint" data-i18n="treeHint">Click ▸/▾ to collapse nodes. Edit attribute values and text in place.</p>
+      <div id="tree" class="xml-tree" role="tree"></div>
+    </section>
+  </main>
+
+  <script src="editor.js"></script>
+</body>
+</html>

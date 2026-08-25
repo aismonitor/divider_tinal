@@ -1,6 +1,9 @@
-# Divider
+# Divider tools
 
-Browser utility that splits an EIS `export.xml` (or a ZIP containing it) into separate XML files — one `contractProcedure` per `<executions>` block.
+Browser utilities for EIS XML:
+
+- **Divider** — split an `export.xml` (or ZIP) into separate `contractProcedure` files, one per `<executions>` block
+- **Editor** — import XML, browse/edit a collapsible tree, download the result
 
 ## Requirements
 
@@ -62,44 +65,39 @@ Any other static server works the same way (for example `npx serve`).
 
 ## Use
 
-1. Switch **Language** (English / Русский) in the header — the whole UI updates immediately. Choice is remembered in the browser.
-2. Click **Choose XML / ZIP** and select an EIS export file:
+### Home
+
+Open the home page and choose **Divider** or **Editor**. Language (EN/RU) is shared across pages.
+
+### Divider
+
+1. Click **Choose XML / ZIP** and select an EIS export file:
    - `.xml` — root `ns3:export` with at least one `ns3:contract`
    - `.zip` — archive that contains such an XML (first matching file is used)
-3. Review the results:
-   - **Parsed** file name
-   - customer `shortName` and `contractSubject`
-   - **Found N executions**
-4. Use **Select all** / row checkboxes to mark executions (`number`, `paidRUR`, name, date).
-   Click a row (not the checkbox) to preview that execution’s XML in a new tab.
-5. Click **Export selected** — a ZIP is created **only then**, and **only** for marked executions.
+2. Review summary and the executions list.
+3. Use **Select all** / row checkboxes; click a row to preview XML in a new tab.
+4. Click **Export selected** — ZIP with only marked executions.
 
-Each file in the ZIP looks like:
-
-```text
-{regNum}_exec_{ordinal}_{id}.xml
-```
-
-and contains:
-
-```xml
-<ns3:export ...>
-  <ns3:contractProcedure schemeVersion="...">
-    ... original procedure including <executions> ...
-  </ns3:contractProcedure>
-</ns3:export>
-```
+Each file in the ZIP looks like `{regNum}_exec_{ordinal}_{id}.xml`.
 
 `contractProcedure` nodes with `<termination>` (and no `<executions>`) are skipped.
+
+### Editor
+
+1. Click **Import XML**.
+2. Browse the tree: ▸/▾ collapses nodes; **Expand all** / **Collapse all** for the whole document.
+3. Edit attribute values and element text in place.
+4. Click **Download XML** to save the edited file.
 
 ## Project layout
 
 | Path | Purpose |
 |------|---------|
-| `index.html` | UI |
-| `app.js` | Parse / list / export |
-| `styles.css` | Styles |
-| `vendor/jszip.min.js` | ZIP read/write |
+| `index.html` / `home.js` | Front page with tool buttons |
+| `divider.html` / `divider.js` | Split executions |
+| `editor.html` / `editor.js` | Tree XML editor |
+| `styles.css` | Shared styles |
+| `vendor/jszip.min.js` | ZIP read/write (Divider) |
 | `Dockerfile` | nginx image for static serving |
 | `docker-compose.yml` | Run on port 8765 |
 | `run-vds.sh` | Install Docker and start on Ubuntu 24.04 VDS |
