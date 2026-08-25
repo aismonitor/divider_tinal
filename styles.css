@@ -445,43 +445,73 @@ body {
   cursor: pointer;
 }
 
+.exec-table {
+  border: 1px solid var(--line);
+  overflow-x: auto;
+}
+
 .exec-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--line);
 }
 
 .exec-row {
   display: grid;
-  grid-template-columns: 3.5rem 7.5rem minmax(0, 1fr) 7rem auto;
+  grid-template-columns: 3rem 6.5rem 8rem 7.5rem minmax(8rem, 1fr) 7rem auto;
   gap: 0.75rem;
   align-items: center;
   padding: 0.75rem 0.9rem;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
+  min-width: 42rem;
+}
+
+.exec-head {
+  cursor: default;
+  background: #efe9dc;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.exec-head:hover {
+  background: #efe9dc;
 }
 
 .exec-row:hover {
   background: #f3eee3;
 }
 
-.exec-row:last-child {
+.exec-list .exec-row:last-child {
   border-bottom: 0;
 }
 
-.exec-row:nth-child(even) {
+.exec-list .exec-row:nth-child(even) {
   background: #faf7f0;
 }
 
-.exec-num {
+.exec-docnum,
+.exec-sid,
+.exec-num,
+.exec-paid,
+.exec-date {
   font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.exec-docnum,
+.exec-num {
   font-weight: 600;
 }
 
-.exec-paid {
-  font-family: var(--mono);
-  white-space: nowrap;
+.exec-sid {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .exec-name {
@@ -490,15 +520,14 @@ body {
 }
 
 .exec-date {
-  font-family: var(--mono);
   color: var(--muted);
-  white-space: nowrap;
 }
 
 .exec-check {
   display: inline-flex;
   justify-content: flex-end;
   margin: 0;
+  min-height: 1.1rem;
 }
 
 .export-btn {
@@ -567,16 +596,52 @@ body {
   }
 
   .exec-row {
-    grid-template-columns: 2.5rem 1fr auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
     grid-template-areas:
       "num paid check"
+      "docnum sid sid"
       "name name name"
       "date date date";
+    min-width: 0;
+    gap: 0.45rem 0.75rem;
   }
 
+  .exec-head {
+    display: none;
+  }
+
+  .exec-docnum { grid-area: docnum; }
+  .exec-sid { grid-area: sid; }
   .exec-num { grid-area: num; }
   .exec-paid { grid-area: paid; }
   .exec-check { grid-area: check; }
   .exec-name { grid-area: name; }
   .exec-date { grid-area: date; }
+
+  .exec-docnum::before,
+  .exec-sid::before,
+  .exec-num::before,
+  .exec-paid::before,
+  .exec-date::before {
+    display: block;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.1rem;
+  }
+
+  .exec-docnum::before { content: attr(data-label); }
+  .exec-sid::before { content: attr(data-label); }
+  .exec-num::before { content: attr(data-label); }
+  .exec-paid::before { content: attr(data-label); }
+  .exec-date::before { content: attr(data-label); }
+
+  .exec-docnum,
+  .exec-sid {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
