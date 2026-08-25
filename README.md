@@ -9,6 +9,23 @@ Browser utility that splits an EIS `export.xml` (or a ZIP containing it) into se
 
 ## Run
 
+### Docker (recommended)
+
+```bash
+docker compose up --build
+```
+
+Open [http://127.0.0.1:8765/](http://127.0.0.1:8765/)
+
+Or without Compose:
+
+```bash
+docker build -t divider .
+docker run --rm -p 8765:80 divider
+```
+
+### Local static server
+
 From the project root:
 
 ```bash
@@ -61,6 +78,8 @@ and contains:
 | `app.js` | Parse / list / export |
 | `styles.css` | Styles |
 | `vendor/jszip.min.js` | ZIP read/write |
+| `Dockerfile` | nginx image for static serving |
+| `docker-compose.yml` | Run on port 8765 |
 
 ## Notes
 

@@ -1,0 +1,16 @@
+.git
+.gitignore
+export.xml
+export.zip
+scheme_16_2_8_iter_1/
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
