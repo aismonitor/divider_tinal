@@ -3,21 +3,32 @@ set -euo pipefail
 
 PORT="${PORT:-8765}"
 export PORT
+export DEBIAN_FRONTEND="${DEBIAN_FRONTEND:-noninteractive}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
 usage() {
   cat <<EOF
-Usage: $0 [start|stop|restart|status|logs]
+Usage: $0 [start|stop|restart|status|logs|update]
 
-Run Divider on Ubuntu 24.04 VDS with Docker Compose.
+Run Divider tools on Ubuntu 24.04 VDS with Docker Compose.
+
+Commands:
+  start     Build and start (default)
+  stop      Stop containers
+  restart   Rebuild and restart
+  status    Show container status
+  logs      Follow nginx logs
+  update    git pull --ff-only + rebuild (same as ./update-vds.sh)
 
 Environment:
-  PORT   Host port (default: 8765)
+  PORT     Host port (default: 8765)
+  BRANCH   Branch for update (default: main)
 
 Examples:
   $0
   PORT=8080 $0 start
+  $0 update
   $0 logs
 EOF
 }
@@ -52,6 +63,7 @@ install_docker_ubuntu_2404() {
 
   local arch codename
   arch="$(dpkg --print-architecture)"
+  # shellcheck source=/dev/null
   codename="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
 
   echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${codename} stable" \
@@ -76,6 +88,25 @@ ensure_docker() {
   exit 1
 }
 
+ensure_compose_files() {
+  if [[ ! -f Dockerfile ]] || [[ ! -f docker-compose.yml ]]; then
+    echo "Missing Dockerfile or docker-compose.yml in ${ROOT}" >&2
+    exit 1
+  fi
+  local required=(index.html divider.html editor.html home.js divider.js editor.js styles.css nginx.conf)
+  local f
+  for f in "${required[@]}"; do
+    if [[ ! -e "$f" ]]; then
+      echo "Missing required app file: ${f}" >&2
+      exit 1
+    fi
+  done
+  if [[ ! -f vendor/jszip.min.js ]]; then
+    echo "Missing vendor/jszip.min.js (needed by Divider)" >&2
+    exit 1
+  fi
+}
+
 server_ip() {
   hostname -I 2>/dev/null | awk '{print $1}'
 }
@@ -84,22 +115,27 @@ print_access() {
   local ip
   ip="$(server_ip)"
   echo
-  echo "Divider is running."
+  echo "Divider tools are running."
   if [[ -n "$ip" ]]; then
     echo "  http://${ip}:${PORT}/"
   fi
   echo "  http://127.0.0.1:${PORT}/"
   echo
-  echo "Commands: $0 status | logs | stop | restart"
+  echo "Commands: $0 status | logs | stop | restart | update"
+}
+
+start_stack() {
+  ensure_docker
+  ensure_compose_files
+  docker_cmd compose up -d --build
+  print_access
 }
 
 cmd="${1:-start}"
 
 case "$cmd" in
   start)
-    ensure_docker
-    docker_cmd compose up -d --build
-    print_access
+    start_stack
     ;;
   stop)
     ensure_docker
@@ -107,6 +143,7 @@ case "$cmd" in
     ;;
   restart)
     ensure_docker
+    ensure_compose_files
     docker_cmd compose down
     docker_cmd compose up -d --build
     print_access
@@ -118,6 +155,9 @@ case "$cmd" in
   logs)
     ensure_docker
     docker_cmd compose logs -f --tail=100
+    ;;
+  update)
+    exec "$ROOT/update-vds.sh"
     ;;
   -h|--help|help)
     usage

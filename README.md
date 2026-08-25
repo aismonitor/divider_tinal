@@ -3,7 +3,7 @@
 Browser utilities for EIS XML:
 
 - **Divider** — split an `export.xml` (or ZIP) into separate `contractProcedure` files, one per `<executions>` block
-- **Editor** — import XML, browse/edit a collapsible tree, download the result
+- **Editor** — import XML, edit field/value data in a table, download the result
 
 ## Requirements
 
@@ -32,7 +32,7 @@ docker run --rm -p 8765:80 divider
 On a fresh VPS/VDS (Ubuntu 24.04), from the project directory:
 
 ```bash
-chmod +x run-vds.sh
+chmod +x run-vds.sh update-vds.sh
 ./run-vds.sh
 ```
 
@@ -45,6 +45,14 @@ Other commands:
 ./run-vds.sh logs     # follow nginx logs
 ./run-vds.sh stop     # stop service
 ./run-vds.sh restart  # rebuild and restart
+./run-vds.sh update   # git pull --ff-only + rebuild (or ./update-vds.sh)
+```
+
+To deploy a newer version already pushed to GitHub:
+
+```bash
+./update-vds.sh
+# or: BRANCH=main ./update-vds.sh
 ```
 
 Open `http://<server-ip>:8765/` in a browser. Allow the port in the cloud firewall if the page does not load.
@@ -95,12 +103,13 @@ Each file in the ZIP looks like `{regNum}_exec_{ordinal}_{id}.xml`.
 |------|---------|
 | `index.html` / `home.js` | Front page with tool buttons |
 | `divider.html` / `divider.js` | Split executions |
-| `editor.html` / `editor.js` | Tree XML editor |
+| `editor.html` / `editor.js` | Field/value XML editor |
 | `styles.css` | Shared styles |
 | `vendor/jszip.min.js` | ZIP read/write (Divider) |
 | `Dockerfile` | nginx image for static serving |
 | `docker-compose.yml` | Run on port 8765 |
 | `run-vds.sh` | Install Docker and start on Ubuntu 24.04 VDS |
+| `update-vds.sh` | Pull latest `main` and rebuild on the VDS |
 
 ## Notes
 
