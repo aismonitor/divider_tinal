@@ -24,6 +24,28 @@ docker build -t divider .
 docker run --rm -p 8765:80 divider
 ```
 
+### Ubuntu 24.04 VDS
+
+On a fresh VPS/VDS (Ubuntu 24.04), from the project directory:
+
+```bash
+chmod +x run-vds.sh
+./run-vds.sh
+```
+
+The script installs Docker if needed, builds the image, and starts the app in the background on port **8765** (override with `PORT=8080 ./run-vds.sh`).
+
+Other commands:
+
+```bash
+./run-vds.sh status   # container state
+./run-vds.sh logs     # follow nginx logs
+./run-vds.sh stop     # stop service
+./run-vds.sh restart  # rebuild and restart
+```
+
+Open `http://<server-ip>:8765/` in a browser. Allow the port in the cloud firewall if the page does not load.
+
 ### Local static server
 
 From the project root:
@@ -80,6 +102,7 @@ and contains:
 | `vendor/jszip.min.js` | ZIP read/write |
 | `Dockerfile` | nginx image for static serving |
 | `docker-compose.yml` | Run on port 8765 |
+| `run-vds.sh` | Install Docker and start on Ubuntu 24.04 VDS |
 
 ## Notes
 

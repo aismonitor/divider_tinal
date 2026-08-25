@@ -2,5 +2,5 @@ services:
   divider:
     build: .
     ports:
-      - "8765:80"
+      - "${PORT:-8765}:80"
     restart: unless-stopped
