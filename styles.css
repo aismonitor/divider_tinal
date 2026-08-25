@@ -192,7 +192,10 @@ body {
 }
 
 .data-input {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
   font: inherit;
   font-family: var(--mono);
   font-size: 0.85rem;
@@ -200,12 +203,24 @@ body {
   background: #fff;
   border: 1px solid var(--line);
   padding: 0.4rem 0.5rem;
+  line-height: 1.35;
 }
 
 .data-textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 2.05rem;
+  field-sizing: content;
+}
+
+.data-textarea-fixed {
+  height: 4.8rem;
+  min-height: 4.8rem;
+  max-height: 4.8rem;
+  overflow: auto;
   resize: vertical;
-  min-height: 2.4rem;
-  line-height: 1.35;
+  field-sizing: fixed;
+  word-break: break-all;
 }
 
 .data-input:focus {

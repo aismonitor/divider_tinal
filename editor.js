@@ -187,28 +187,102 @@
     return `${name} #${same.indexOf(el) + 1}`;
   }
 
+  /** @param {HTMLTextAreaElement} el */
+  function autosizeField(el) {
+    if (el.dataset.fixedHeight === "1") return;
+    if (el.closest("tr")?.hidden) return;
+    el.style.height = "auto";
+    const next = el.scrollHeight;
+    if (next > 0) el.style.height = `${next}px`;
+  }
+
+  /** @param {ParentNode} root */
+  function autosizeFieldsIn(root) {
+    root.querySelectorAll("textarea.data-input:not([data-fixed-height='1'])").forEach((el) => {
+      autosizeField(/** @type {HTMLTextAreaElement} */ (el));
+    });
+  }
+
+  /**
+   * Attachment / crypto payload fields can be multi‑MB base64 — keep fixed height.
+   * Seen in EIS samples: <content> under attachmentInfo; <signature> under cryptoSigns/attachment.
+   * @param {Element | null} el
+   * @param {string} [fieldLabel]
+   * @param {string} [value]
+   */
+  function isFixedHeightValue(el, fieldLabel, value) {
+    const fromEl = el ? displayName(el).toLowerCase() : "";
+    const fromLabel = (fieldLabel || "").replace(/\s+#\d+$/, "").toLowerCase();
+    const names = [fromEl, fromLabel].filter(Boolean);
+    const bulkyNames = new Set([
+      "content",
+      "attachmentcontent",
+      "filecontent",
+      "signature",
+    ]);
+    if (names.some((n) => bulkyNames.has(n))) return true;
+
+    for (const n of names) {
+      if (
+        n.endsWith("content") &&
+        n !== "publishedcontentid" &&
+        n !== "contentid" &&
+        el &&
+        hasAttachmentAncestor(el)
+      ) {
+        return true;
+      }
+    }
+
+    const sample = value != null ? value : el ? directText(el) : "";
+    if (sample.length >= 2048 && looksLikeBase64Payload(sample)) return true;
+    return false;
+  }
+
+  /** @param {Element} el */
+  function hasAttachmentAncestor(el) {
+    let p = el.parentElement;
+    while (p && p.nodeType === Node.ELEMENT_NODE) {
+      const n = displayName(p).toLowerCase();
+      if (n.includes("attachment") || n === "cryptosigns") return true;
+      p = p.parentElement;
+    }
+    return false;
+  }
+
+  /** @param {string} text */
+  function looksLikeBase64Payload(text) {
+    const head = text.trim().slice(0, 240).replace(/\s+/g, "");
+    return head.length >= 64 && /^[A-Za-z0-9+/=]+$/.test(head);
+  }
+
   /**
    * @param {HTMLElement} cell
    * @param {string} value
    * @param {(v: string) => void} onChange
+   * @param {{ fixedHeight?: boolean }} [opts]
    */
-  function bindValueInput(cell, value, onChange) {
-    const multiline = value.includes("\n") || value.length > 80;
-    /** @type {HTMLInputElement | HTMLTextAreaElement} */
-    let input;
-    if (multiline) {
-      input = document.createElement("textarea");
-      input.className = "data-input data-textarea";
-      input.rows = Math.min(8, Math.max(2, value.split("\n").length + 1));
-    } else {
-      input = document.createElement("input");
-      input.type = "text";
-      input.className = "data-input";
-    }
+  function bindValueInput(cell, value, onChange, opts) {
+    const fixed = Boolean(opts && opts.fixedHeight);
+    const input = document.createElement("textarea");
+    input.className = fixed
+      ? "data-input data-textarea data-textarea-fixed"
+      : "data-input data-textarea";
+    input.rows = fixed ? 3 : 1;
+    if (fixed) input.dataset.fixedHeight = "1";
     input.value = value;
     input.spellcheck = false;
-    input.addEventListener("input", () => onChange(input.value));
+    input.addEventListener("input", () => {
+      onChange(input.value);
+      if (!fixed) autosizeField(input);
+    });
     cell.appendChild(input);
+    if (!fixed) {
+      requestAnimationFrame(() => {
+        autosizeField(input);
+        requestAnimationFrame(() => autosizeField(input));
+      });
+    }
   }
 
   /**
@@ -216,8 +290,9 @@
    * @param {string} value
    * @param {(v: string) => void} onChange
    * @param {number} depth
+   * @param {Element | null} [sourceEl]
    */
-  function createFieldRow(field, value, onChange, depth) {
+  function createFieldRow(field, value, onChange, depth, sourceEl) {
     const tr = document.createElement("tr");
     tr.className = "data-row";
     tr.style.setProperty("--depth", String(depth));
@@ -228,7 +303,9 @@
 
     const td = document.createElement("td");
     td.className = "data-value";
-    bindValueInput(td, value, onChange);
+    bindValueInput(td, value, onChange, {
+      fixedHeight: isFixedHeightValue(sourceEl || null, field, value),
+    });
 
     tr.append(th, td);
     return tr;
@@ -252,8 +329,13 @@
         if (row.classList.contains("section-row")) {
           const nestedOpen = row.getAttribute("aria-expanded") === "true";
           setSectionExpanded(/** @type {any} */ (row), nestedOpen);
+        } else {
+          autosizeFieldsIn(row);
         }
       }
+    }
+    if (expand) {
+      requestAnimationFrame(() => autosizeFieldsIn(header.parentElement || dataBody));
     }
   }
 
@@ -267,7 +349,7 @@
 
     if (isLeaf(el) && dataAttrs(el).length === 0) {
       frag.appendChild(
-        createFieldRow(sectionTitle(el, parent), directText(el), (v) => setDirectText(el, v), depth),
+        createFieldRow(sectionTitle(el, parent), directText(el), (v) => setDirectText(el, v), depth, el),
       );
       return frag;
     }
@@ -329,19 +411,19 @@
 
     for (const attr of dataAttrs(el)) {
       pushMember(
-        createFieldRow(attr.name, attr.value, (v) => el.setAttribute(attr.name, v), depth + 1),
+        createFieldRow(attr.name, attr.value, (v) => el.setAttribute(attr.name, v), depth + 1, el),
       );
     }
 
     if (isLeaf(el)) {
       pushMember(
-        createFieldRow(t("valueLabel"), directText(el), (v) => setDirectText(el, v), depth + 1),
+        createFieldRow(t("valueLabel"), directText(el), (v) => setDirectText(el, v), depth + 1, el),
       );
     } else {
       const text = directText(el);
       if (text.trim()) {
         pushMember(
-          createFieldRow("(text)", text, (v) => setDirectText(el, v), depth + 1),
+          createFieldRow("(text)", text, (v) => setDirectText(el, v), depth + 1, el),
         );
       }
 
@@ -362,7 +444,7 @@
             label = `${base} #${idx}`;
           }
           pushMember(
-            createFieldRow(label, directText(child), (v) => setDirectText(child, v), depth + 1),
+            createFieldRow(label, directText(child), (v) => setDirectText(child, v), depth + 1, child),
           );
         } else {
           pushFrag(renderSection(child, el, depth + 1));
@@ -464,6 +546,10 @@
     tablePanel.hidden = false;
     editorActions.hidden = false;
     setStatus(t("loadedOk", { name }), "ok");
+    requestAnimationFrame(() => {
+      autosizeFieldsIn(dataBody);
+      requestAnimationFrame(() => autosizeFieldsIn(dataBody));
+    });
   }
 
   fileInput?.addEventListener("change", async () => {
