@@ -22,7 +22,7 @@
           </select>
         </label>
       </div>
-      <p class="tagline" data-i18n="tagline">Import XML, edit the tree, download the result</p>
+      <p class="tagline" data-i18n="tagline">Import XML, edit data in a table, download the result</p>
     </header>
 
     <section class="panel editor-toolbar">
@@ -32,7 +32,7 @@
       </label>
       <div class="editor-actions" id="editorActions" hidden>
         <button type="button" id="expandAllBtn" class="ghost-btn" data-i18n="expandAll">Expand all</button>
-        <button type="button" id="collapseAllBtn" class="ghost-btn" data-i18n="collapseAll">Collapse all</button>
+        <button type="button" id="collapseEmptyBtn" class="ghost-btn" data-i18n="collapseEmpty">Collapse empty</button>
         <button type="button" id="downloadBtn" class="export-btn" data-i18n="download">Download XML</button>
       </div>
     </section>
@@ -46,19 +46,29 @@
           <dd id="fileName">—</dd>
         </div>
         <div>
-          <dt data-i18n="rootName">Root</dt>
+          <dt data-i18n="rootName">Document</dt>
           <dd id="rootName">—</dd>
         </div>
         <div>
-          <dt data-i18n="nodeCount">Elements</dt>
-          <dd id="nodeCount">0</dd>
+          <dt data-i18n="fieldCount">Fields</dt>
+          <dd id="fieldCount">0</dd>
         </div>
       </dl>
     </section>
 
-    <section id="treePanel" class="results tree-panel" hidden>
-      <p class="list-hint" data-i18n="treeHint">Click ▸/▾ to collapse nodes. Edit attribute values and text in place.</p>
-      <div id="tree" class="xml-tree" role="tree"></div>
+    <section id="tablePanel" class="results table-panel" hidden>
+      <p class="list-hint" data-i18n="tableHint">Sections with data are expanded. Edit values in the Value column.</p>
+      <div class="data-table-wrap">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th class="col-field" data-i18n="colField">Field</th>
+              <th class="col-value" data-i18n="colValue">Value</th>
+            </tr>
+          </thead>
+          <tbody id="dataBody"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 

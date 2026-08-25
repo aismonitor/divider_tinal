@@ -126,131 +126,134 @@ body {
   margin-top: 1rem;
 }
 
-.tree-panel {
+.table-panel {
   margin-top: 1rem;
 }
 
-.xml-tree {
+.data-table-wrap {
   border: 1px solid var(--line);
   background: #faf7f0;
-  max-height: min(70vh, 820px);
+  max-height: min(75vh, 900px);
   overflow: auto;
-  padding: 0.35rem 0;
 }
 
-.tree-node {
-  --depth: 0;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.tree-row {
-  display: grid;
-  grid-template-columns: 1.6rem minmax(0, auto) minmax(0, 1fr);
-  gap: 0.45rem;
-  align-items: center;
-  padding: 0.35rem 0.75rem 0.35rem calc(0.55rem + var(--depth) * 1.1rem);
-  cursor: default;
-  user-select: none;
-}
-
-.tree-row:hover {
-  background: #f0ebe0;
-}
-
-.tree-toggle {
-  width: 1.4rem;
-  height: 1.4rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.tree-toggle.is-leaf {
-  cursor: default;
-  opacity: 0.35;
-}
-
-.tree-tag {
-  font-family: var(--mono);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--accent);
-  white-space: nowrap;
-}
-
-.tree-badge {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.tree-body {
-  padding: 0 0.75rem 0.55rem calc(0.55rem + var(--depth) * 1.1rem + 1.6rem);
-}
-
-.tree-section-label {
-  display: block;
-  margin: 0.35rem 0 0.25rem;
-  color: var(--muted);
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
   font-size: 0.75rem;
-  text-transform: uppercase;
+  font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: #efe9dc;
+  border-bottom: 1px solid var(--line);
+  padding: 0.65rem 0.85rem;
 }
 
-.tree-attrs,
-.tree-text {
-  display: block;
-  margin-bottom: 0.35rem;
+.data-table .col-field {
+  width: 34%;
 }
 
-.tree-attr {
-  display: grid;
-  grid-template-columns: minmax(7rem, 12rem) minmax(0, 1fr);
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.3rem;
+.data-table .col-value {
+  width: 66%;
 }
 
-.tree-attr-name {
+.data-row td {
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  padding: 0.45rem 0.85rem;
+  background: var(--panel);
+}
+
+.data-row:nth-child(even) td {
+  background: #fbf8f1;
+}
+
+.data-field {
   font-family: var(--mono);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--ink);
+  padding-left: calc(0.85rem + var(--depth, 0) * 1rem) !important;
   overflow-wrap: anywhere;
 }
 
-.tree-input,
-.tree-textarea {
+.data-value {
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+}
+
+.data-input {
   width: 100%;
   font: inherit;
   font-family: var(--mono);
   font-size: 0.85rem;
   color: var(--ink);
-  background: var(--panel);
+  background: #fff;
   border: 1px solid var(--line);
   padding: 0.4rem 0.5rem;
 }
 
-.tree-textarea {
+.data-textarea {
   resize: vertical;
-  min-height: 2.2rem;
+  min-height: 2.4rem;
   line-height: 1.35;
 }
 
-.tree-input:focus,
-.tree-textarea:focus {
+.data-input:focus {
   outline: 2px solid #b7d7ce;
   outline-offset: 1px;
 }
 
-.tree-children {
-  margin-top: 0.15rem;
+.section-row .section-cell {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  background: #ebe4d6;
+}
+
+.section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.85rem 0.55rem calc(0.85rem + var(--depth, 0) * 1rem);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.section-toggle:hover {
+  background: #e3dccb;
+}
+
+.section-caret {
+  width: 1rem;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.section-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.section-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .header-top {
@@ -516,16 +519,36 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .tree-attr {
-    grid-template-columns: 1fr;
+  .data-table .col-field,
+  .data-table .col-value {
+    width: auto;
   }
 
-  .tree-row {
-    grid-template-columns: 1.4rem minmax(0, 1fr);
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+    width: 100%;
   }
 
-  .tree-badge {
-    grid-column: 2;
+  .data-table thead {
+    display: none;
+  }
+
+  .data-field {
+    border-bottom: 0 !important;
+    padding-bottom: 0.15rem !important;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .data-value {
+    padding-top: 0 !important;
+  }
+
+  .section-meta {
+    display: none;
   }
 
   .exec-row {
