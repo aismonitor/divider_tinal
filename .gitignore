@@ -12,3 +12,5 @@ scheme_16_2_8_iter_1/
 *.tar.gz
 *.tgz
 *.gz
+
+*.xml
