@@ -41,12 +41,16 @@ The script installs Docker if needed, builds the image, and starts the app in th
 Other commands:
 
 ```bash
-./run-vds.sh status   # container state
-./run-vds.sh logs     # follow nginx logs
-./run-vds.sh stop     # stop service
-./run-vds.sh restart  # rebuild and restart
-./run-vds.sh update   # git pull --ff-only + rebuild (or ./update-vds.sh)
+./run-vds.sh status          # container state
+./run-vds.sh logs            # follow nginx logs
+./run-vds.sh stop            # stop service
+./run-vds.sh restart         # rebuild and restart
+./run-vds.sh update          # git pull --ff-only + rebuild (or ./update-vds.sh)
+./run-vds.sh install-watch   # cron every 5m + swapfile (recovers after OOM)
+./run-vds.sh watch           # one-shot health check / soft start
 ```
+
+On small VDS hosts the container can disappear after an OOM kill. `install-watch` adds a 5-minute cron job that soft-starts the stack without rebuilding, caps container RAM (`96m` by default), and creates a 1G swapfile if the machine has none.
 
 To deploy a newer version already pushed to GitHub:
 
@@ -109,6 +113,7 @@ Each file in the ZIP looks like `{regNum}_exec_{ordinal}_{id}.xml`.
 | `Dockerfile` | nginx image for static serving |
 | `docker-compose.yml` | Run on port 8765 |
 | `run-vds.sh` | Install Docker and start on Ubuntu 24.04 VDS |
+| `watch-vds.sh` | Cron-friendly health check / soft restart |
 | `update-vds.sh` | Pull latest `main` and rebuild on the VDS |
 
 ## Notes
