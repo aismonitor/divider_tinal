@@ -1,6 +1,7 @@
 .DS_Store
 *.log
 logs/
+.env
 node_modules/
 .idea/
 .vscode/
@@ -15,3 +16,5 @@ scheme_16_2_8_iter_1/
 *.gz
 
 *.xml
+__pycache__/
+*.pyc
