@@ -127,7 +127,7 @@ print_access() {
 start_stack() {
   ensure_docker
   ensure_compose_files
-  docker_cmd compose up -d --build
+  docker_cmd compose up -d --build --force-recreate --remove-orphans
   print_access
 }
 
@@ -145,7 +145,8 @@ case "$cmd" in
     ensure_docker
     ensure_compose_files
     docker_cmd compose down
-    docker_cmd compose up -d --build
+    docker_cmd compose up -d --build --force-recreate --remove-orphans
+    docker_cmd image prune -f >/dev/null 2>&1 || true
     print_access
     ;;
   status)
