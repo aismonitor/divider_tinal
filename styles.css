@@ -88,6 +88,50 @@ body {
   line-height: 1.45;
 }
 
+.vds-update {
+  margin-top: 1.75rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.vds-update-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1rem;
+}
+
+.vds-update-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.vds-update-desc {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  max-width: 36rem;
+}
+
+.vds-update-status {
+  margin: 0.85rem 0 0;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.vds-update-status.is-ok {
+  color: var(--ok);
+}
+
+.vds-update-status.is-error {
+  color: var(--danger);
+}
+
 .editor-toolbar {
   display: flex;
   flex-wrap: wrap;

@@ -32,6 +32,17 @@
         <span class="tool-card-desc" data-i18n="editorDesc">Import XML, browse and edit the tree, download the result</span>
       </a>
     </nav>
+
+    <section class="vds-update panel" aria-label="Server update">
+      <div class="vds-update-row">
+        <div class="vds-update-copy">
+          <h2 class="vds-update-title" data-i18n="updateTitle">Server</h2>
+          <p class="vds-update-desc" data-i18n="updateDesc">Pull the latest code from git and rebuild this VDS deployment.</p>
+        </div>
+        <button type="button" id="updateFromGitBtn" class="ghost-btn" data-i18n="updateBtn">Update from git</button>
+      </div>
+      <p id="updateStatus" class="vds-update-status" hidden></p>
+    </section>
   </main>
 
   <script src="home.js"></script>
