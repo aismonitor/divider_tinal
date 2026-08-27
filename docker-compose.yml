@@ -4,3 +4,13 @@ services:
     ports:
       - "${PORT:-8765}:80"
     restart: unless-stopped
+    # Cap memory so a runaway container is less likely to OOM the whole VDS.
+    # Static nginx needs only a few MB; 96M leaves headroom for spikes.
+    mem_limit: ${DIVIDER_MEM_LIMIT:-96m}
+    memswap_limit: ${DIVIDER_MEM_LIMIT:-96m}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
