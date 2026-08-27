@@ -103,7 +103,7 @@ ensure_compose_files() {
     echo "Missing Dockerfile or docker-compose.yml in ${ROOT}" >&2
     exit 1
   fi
-  local required=(index.html divider.html editor.html home.js divider.js editor.js styles.css nginx.conf)
+  local required=(index.html divider.html editor.html home.js divider.js editor.js styles.css nginx.conf updater/server.py updater/Dockerfile)
   local f
   for f in "${required[@]}"; do
     if [[ ! -e "$f" ]]; then
@@ -114,6 +114,37 @@ ensure_compose_files() {
   if [[ ! -f vendor/jszip.min.js ]]; then
     echo "Missing vendor/jszip.min.js (needed by Divider)" >&2
     exit 1
+  fi
+}
+
+ensure_update_env() {
+  # Compose mounts SSH for private remotes; nested ${HOME} defaults are unreliable.
+  if [[ -z "${HOME:-}" ]]; then
+    HOME="$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f6 || true)"
+    export HOME="${HOME:-/root}"
+  fi
+  export DIVIDER_SSH_DIR="${DIVIDER_SSH_DIR:-$HOME/.ssh}"
+  mkdir -p "$DIVIDER_SSH_DIR"
+  chmod 700 "$DIVIDER_SSH_DIR" 2>/dev/null || true
+
+  # Stable compose project name (updater cwd is /repo, which would otherwise become "repo").
+  export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-divider}"
+
+  if [[ -f "$ROOT/.env" ]]; then
+    # shellcheck disable=SC1091
+    set -a
+    # shellcheck source=/dev/null
+    source "$ROOT/.env"
+    set +a
+    export PORT="${PORT:-8765}"
+    export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-divider}"
+  fi
+
+  if [[ -z "${UPDATE_TOKEN:-}" ]]; then
+    echo "==> NOTE: UPDATE_TOKEN is empty — home-page \"Update from git\" stays disabled."
+    echo "    Copy .env.example to .env and set UPDATE_TOKEN=$(openssl rand -hex 16 2>/dev/null || echo '…')"
+  else
+    echo "==> Remote git update API enabled (home-page button)."
   fi
 }
 
@@ -132,11 +163,13 @@ print_access() {
   echo "  http://127.0.0.1:${PORT}/"
   echo
   echo "Commands: $0 status | logs | stop | restart | update | install-watch"
+  echo "Home page: Update from git (requires UPDATE_TOKEN in .env)"
 }
 
 start_stack() {
   ensure_docker
   ensure_compose_files
+  ensure_update_env
   docker_cmd compose up -d --build --force-recreate --remove-orphans
   print_access
 }
@@ -230,6 +263,7 @@ case "$cmd" in
   restart)
     ensure_docker
     ensure_compose_files
+    ensure_update_env
     docker_cmd compose down
     docker_cmd compose up -d --build --force-recreate --remove-orphans
     docker_cmd image prune -f >/dev/null 2>&1 || true

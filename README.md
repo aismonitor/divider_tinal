@@ -61,6 +61,18 @@ To deploy a newer version already pushed to GitHub:
 
 Open `http://<server-ip>:8765/` in a browser. Allow the port in the cloud firewall if the page does not load.
 
+### Remote “Update from git”
+
+On the VDS, create a `.env` next to `docker-compose.yml`:
+
+```bash
+cp .env.example .env
+# set a long random token, e.g. openssl rand -hex 24
+./run-vds.sh restart
+```
+
+The home page then shows **Update from git**. It asks for `UPDATE_TOKEN`, runs `git fetch` + `git pull --ff-only`, and rebuilds only the web container (the updater stays up). Private remotes need SSH keys under `DIVIDER_SSH_DIR` (default `~/.ssh`).
+
 ### Local static server
 
 From the project root:
@@ -79,7 +91,7 @@ Any other static server works the same way (for example `npx serve`).
 
 ### Home
 
-Open the home page and choose **Divider** or **Editor**. Language (EN/RU) is shared across pages.
+Open the home page and choose **Divider** or **Editor**. Language (EN/RU) is shared across pages. On a configured VDS, use **Update from git** to pull and rebuild remotely.
 
 ### Divider
 
@@ -115,6 +127,8 @@ Each file in the ZIP looks like `{regNum}_exec_{ordinal}_{id}.xml`.
 | `run-vds.sh` | Install Docker and start on Ubuntu 24.04 VDS |
 | `watch-vds.sh` | Cron-friendly health check / soft restart |
 | `update-vds.sh` | Pull latest `main` and rebuild on the VDS |
+| `updater/` | Internal API for home-page “Update from git” |
+| `.env.example` | `UPDATE_TOKEN` / port template for VDS |
 
 ## Notes
 

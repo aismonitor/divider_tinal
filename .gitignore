@@ -1,6 +1,7 @@
 .DS_Store
 *.log
 logs/
+.env
 node_modules/
 .idea/
 .vscode/

@@ -4,12 +4,40 @@ services:
     ports:
       - "${PORT:-8765}:80"
     restart: unless-stopped
+    depends_on:
+      - updater
     # Cap memory so a runaway container is less likely to OOM the whole VDS.
     # Static nginx needs only a few MB; 96M leaves headroom for spikes.
     mem_limit: ${DIVIDER_MEM_LIMIT:-96m}
     memswap_limit: ${DIVIDER_MEM_LIMIT:-96m}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Internal-only API for "Update from git" (token required). Not published to the host.
+  updater:
+    build: ./updater
+    restart: unless-stopped
+    mem_limit: ${UPDATER_MEM_LIMIT:-96m}
+    memswap_limit: ${UPDATER_MEM_LIMIT:-96m}
+    environment:
+      UPDATE_TOKEN: ${UPDATE_TOKEN:-}
+      BRANCH: ${BRANCH:-main}
+      REMOTE: ${REMOTE:-origin}
+      REPO_DIR: /repo
+      COMPOSE_SERVICE: divider
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-divider}
+      # Prefer SSH when the repo remote is git@...
+      GIT_SSH_COMMAND: ssh -o StrictHostKeyChecking=accept-new -o BatchMode=yes
+    volumes:
+      - .:/repo
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DIVIDER_SSH_DIR:-/root/.ssh}:/root/.ssh:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 30s
       timeout: 3s
       retries: 3
